@@ -12,6 +12,7 @@
 use think\Route;
 //
 Route::rule('abc/:name','index/Login/login');
+Route::rule('register','index/Index/register');
 
 //return [
 //    '__pattern__' => [

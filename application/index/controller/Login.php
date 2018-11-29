@@ -1,13 +1,13 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: ASUS
+ * MUser: ASUS
  * Date: 2018/10/8
  * Time: 20:43
  */
 
 namespace app\index\controller;
-use app\index\model\User;
+use app\index\model\MUser;
 use think\Controller;
 
 class Login extends Controller
@@ -16,13 +16,8 @@ class Login extends Controller
     //http://localhost/index.php/abc/56454654
     public function login($name="")
     {
-        //$this->request->cookie()
-        //Cookie::init(['prefix'=>'think_','expire'=>3600,'path'=>'/']);
-        //Cookie::prefix('think_');
-        //Cookie::set("asdas",$name,30);
-        $user = new User();
+        $user = new MUser();
         return $user->login($name, "123456");
-        //$this->assign('domain',$this->request->url(true));
     }
 
 }
