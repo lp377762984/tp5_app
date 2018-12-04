@@ -3,28 +3,26 @@
 namespace app\index\controller;
 
 use app\index\model\MUser;
-use think\Db;
+use think\Controller;
+use think\Request;
 
-class Index
+class Index extends Controller
 {
 
     public function index()
     {
-        //return json((Db::table('user')->select()));
-        //$userModel =new MUser();
         return "php start!";
-        //return json($userModel->find(1));
     }
 
     public function register($name, $psd)
     {
         $userModel = new MUser();
         return $userModel->register($name, $psd);
-        //return json($userModel->find(1));
     }
 
-    public function hello()
+    public function login($name, $psd)
     {
-        return 'hello';
+        $userModel = new MUser();
+        return $userModel->login($name, $psd);
     }
 }

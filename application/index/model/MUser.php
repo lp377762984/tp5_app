@@ -7,6 +7,7 @@ use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\exception\DbException;
 use think\Model;
+use think\Request;
 
 /**
  * Created by PhpStorm.
@@ -18,11 +19,6 @@ class MUser extends Model
 {
     protected $table = 'test_user';//设置表名，否则DbException
 
-    /**
-     * @param $name
-     * @param $psd
-     * @return false|int|mixed
-     */
     public function register($name, $psd)
     {
         $data = [
@@ -54,21 +50,47 @@ class MUser extends Model
         }
     }
 
-    public function getUserById($id)
+    public function login($name, $psd)
     {
-        try {
-            return $this->field($id)->find();
-        } catch (\think\db\exception\DataNotFoundException $e) {
-            return false;
-        } catch (\think\db\exception\ModelNotFoundException $e) {
-            return false;
-        } catch (\think\exception\DbException $e) {
-            return false;
+        $expiredTime = 60 * 5;
+        $data = [
+            'name' => $name,
+            'psd' => $psd
+        ];
+        $userV = new VUser();
+        if (!$userV->check($data)) {
+            return "登录失败";
+        } else {
+            try {
+                $model = $this->where("name", $name)->field('id,name,psd')->find();
+                if (!empty($model)) {
+                    if (md5($data['psd']) == $model->getData()['psd']) {
+                        $sessionId = createSession(md5($model['id'] . time()));
+                        $this->cache($sessionId, $model, $expiredTime);
+                        return '登录成功';
+                    } else {
+                        return '密码错误';
+                    }
+                } else {
+                    return '用户不存在';
+                }
+            } catch (DataNotFoundException $e) {
+                return '登录失败';
+            } catch (ModelNotFoundException $e) {
+                return '登录失败';
+            } catch (DbException $e) {
+                return "数据库出现问题";
+            }
         }
     }
 
-    public function login($name, $password)
+    private function createSession($id)
     {
-        return 'welcome ' . $name . ",your password is " . $password;
+
+    }
+
+    public function getUserInfo()
+    {
+        $header = Request::instance()->header();
     }
 }

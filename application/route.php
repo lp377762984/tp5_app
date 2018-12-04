@@ -13,16 +13,5 @@ use think\Route;
 //
 Route::rule('abc/:name','index/Login/login');
 Route::rule('register','index/Index/register');
+Route::rule('login','index/Index/login');
 
-//return [
-//    '__pattern__' => [
-//        'name' => '\w+',
-//    ],
-//    '[hello]'     => [
-//        ':id'   => ['index/hello', ['method' => 'get'], ['id' => '\d+']],
-//        ':name' => ['index/hello', ['method' => 'post']],
-//    ],
-//    'login/:name'=>'/index/login/login',
-//    'login/:name'=>'/index/login/login',
-//
-//];
