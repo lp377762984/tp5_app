@@ -52,7 +52,6 @@ class MUser extends Model
 
     public function login($name, $psd)
     {
-        $expiredTime = 60 * 5;
         $data = [
             'name' => $name,
             'psd' => $psd
@@ -62,11 +61,15 @@ class MUser extends Model
             return "登录失败";
         } else {
             try {
-                $model = $this->where("name", $name)->field('id,name,psd')->find();
+                $model = $this->where("name", $name)->find();
                 if (!empty($model)) {
                     if (md5($data['psd']) == $model->getData()['psd']) {
-                        $sessionId = createSession(md5($model['id'] . time()));
-                        $this->cache($sessionId, $model, $expiredTime);
+                        $debug = Request::instance()->header('debug');
+                        $sessionId = md5($model['id'] . time());
+                        if ($debug) {
+                            echo($sessionId);
+                        }
+                        cache($sessionId, $model->getData(), 60 * 60);
                         return '登录成功';
                     } else {
                         return '密码错误';
@@ -84,13 +87,59 @@ class MUser extends Model
         }
     }
 
-    private function createSession($id)
-    {
-
-    }
-
+    /**
+     * 获取用户信息
+     */
     public function getUserInfo()
     {
-        $header = Request::instance()->header();
+        $sessionId = Request::instance()->header('sessionId');
+        if (empty($sessionId)) {
+            return '请传入sessionId';
+        }
+        $memberInfo = cache($sessionId);
+        if (!$memberInfo) {
+            return 'sessionId已过期,请重新登录';
+        } else {
+            try {
+                $model = $this->where("id", $memberInfo['id'])->find();
+                return json($model->getData());
+            } catch (DataNotFoundException $e) {
+                return '无此用户';
+            } catch (ModelNotFoundException $e) {
+                return '无此用户';
+            } catch (DbException $e) {
+                return '数据库出现问题';
+            }
+        }
     }
+
+    /**
+     * 上传用户头像
+     */
+    public function uploadsPortrait()
+    {
+        $sessionId = Request::instance()->header('sessionId');
+        if (empty($sessionId)) {
+            return '请传入sessionId';
+        }
+        $memberInfo = cache($sessionId);
+        if (!$memberInfo) {
+            return 'sessionId已过期,请重新登录';
+        } else {
+            $movePath = ROOT_PATH . 'public' . DS . 'uploads' . DS . $memberInfo['id'];
+            $fileName = 'portrait.png';
+            $file = Request::instance()->file('portrait');
+            if (!empty($file)) {
+                $file->validate(['size' => 10 * 1024 * 1024, 'ext' => 'jpg,png,gif'])->rule('date')->move($movePath, $fileName);
+                $this->save([
+                    'portrait' => $movePath . DS . $fileName,
+                ], ['id' => $memberInfo['id']]);
+                return json($this->where('id', $memberInfo['id']) ->field('portrait')->find());
+            } else {
+                return '上传文件为空';
+            }
+
+        }
+    }
+
 }
